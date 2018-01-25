@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/neonima/mouscat)](https://goreportcard.com/report/github.com/neonima/mouscat)
 # Mouscat
 
 Mouscat will notify you if a string occur in a stream. You can pipe in the meantime you are reading multiple files. Awesome.
