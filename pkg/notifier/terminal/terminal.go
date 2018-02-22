@@ -8,8 +8,11 @@ import (
 	"github.com/everdev/mack"
 )
 
+//Terminal is notifier that does only terminal notifications
+type Terminal struct{}
+
 //Notify terminal notifier
-func Notify(data []byte) (err error) {
+func (Terminal) Notify(data []byte, isError bool) error {
 	sys := runtime.GOOS
 	d := string(data)
 	switch {

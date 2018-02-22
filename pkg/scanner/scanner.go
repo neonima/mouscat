@@ -5,42 +5,70 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/neonima/mouscat/pkg/notifier"
+	log "github.com/sirupsen/logrus"
 )
 
 //Scanner is a Scanner that scan any input
 type Scanner struct {
-	Query string
-	//buffleng int
+	Queries []Query
+}
+
+type Query struct {
+	Pattern string
+	Err     bool `json:"Error"`
+}
+
+type occurence struct {
+	occ []byte
+	err bool
 }
 
 //New returns a new scanner type
-func New(query string) Scanner {
+func New(queries []Query) Scanner {
 	return Scanner{
-		Query: query,
+		Queries: queries,
 	}
 }
 
 //Notify is callback method that defines what to Notify
-type Notify func(data []byte) (err error)
 
 //Listen a stream and notify if occurencies are found
-func (s *Scanner) Listen(reader io.Reader, notifier ...Notify) error {
+func (s *Scanner) Listen(reader io.Reader, offset int, notifiers ...notifier.Notification) error {
+	sight := make(chan occurence, offset)
+	defer close(sight)
+	log.Info(offset)
 	p := bufio.NewReader(reader)
-	for {
-		n, _, _ := p.ReadLine()
-		ok := strings.Contains(string(n), s.Query)
-		if ok {
-			for _, notif := range notifier {
-				err := notif(n)
-				if err != nil {
-					return err
-				}
+
+	go func(notifiers []notifier.Notification) {
+		//TODO returns error
+		select {
+		case c := <-sight:
+			for _, notif := range notifiers {
+				notif.Notify(c.occ, c.err)
 			}
-			colorized(n)
 		}
+
+	}(notifiers)
+
+	for {
+
+		n, _, _ := p.ReadLine()
+		//if err != nil {
+		//	return err
+		//}
+		for _, query := range s.Queries {
+			if query.Contains(string(n)) {
+				sight <- occurence{n, query.Err}
+			}
+
+		}
+
 		if len(n) != 0 {
 			fmt.Println(string(n))
 		}
+
 	}
 }
 
@@ -48,4 +76,11 @@ func colorized(b []byte) {
 	c := string(b)
 	b = []byte(fmt.Sprintf("%v%v%v", `\033[0;31m`, c, `\x1b[0m`))
 
+}
+
+//Contains is a wrapper around Query.Contains() that iterate over each
+// queries
+
+func (o *Query) Contains(search string) bool {
+	return strings.Contains(search, o.Pattern)
 }

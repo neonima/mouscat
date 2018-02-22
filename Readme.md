@@ -22,7 +22,7 @@ Pipe it with a command multiple files
 `top | mouscat francis access.log auth.log`
 
 Or just a single file
-`top | mouscat malcom access.log auth.log`
+`top | mouscat malcom auth.log`
 
 ## How to use the API
 
@@ -46,6 +46,8 @@ To create a new notifier, you just need to follow this func signature `Notify fu
 
 
 ## Next features
+
+- Add customization for the number of lines to display
 
 - Advanced query feature such as error detection based on signal and maybe regex
 
